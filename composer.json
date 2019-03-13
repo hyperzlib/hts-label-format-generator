@@ -1,0 +1,23 @@
+{
+    "name": "hyperzlib/label-format-generator",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Quantum",
+            "email": "mcleague@126.com"
+        }
+    ],
+    "require": {
+		"php": ">=5.5.9",
+        "symfony/yaml": "^4.2"
+	},
+	"repositories": {
+		"packagist": {
+			"type": "composer",
+			"url": "https://packagist.phpcomposer.com"
+		}
+	},
+	"autoload": {
+		"files": ["LabelFormat.php", "Question.php"]
+	}
+}
