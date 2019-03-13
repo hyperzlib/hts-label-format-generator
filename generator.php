@@ -19,18 +19,23 @@ $config = include('config.php');
 
 //生成label格式
 $spilterList = [];
-if(defined('GENERATE_LABEL') && GENERATE_LABEL == true){
+if($config['switch']['generate_label'] == true){
     $label = new LabelFormat();
     if(is_file($spilterFile)){
         $spilterList = json_decode(file_get_contents($spilterFile), true);
+        foreach($config['static_spilter'] as $key => $one){
+            $spilterList[$key] = $one;
+        }
         $label->setStaticSpilter($spilterList);
+    } else {
+        $label->setStaticSpilter($config['static_spilter']);
     }
     $spilterList = $label->generate($config['part']);
     $helper = $label->generateMarkdown($config['part'], $spilterList);
 
     file_put_contents($spilterFile, json_encode($spilterList));
     file_put_contents($helpFile, $helper);
-} else {
+} elseif($config['switch']['generate_qst']) {
     //读取已经生成的Label
     if(is_file($spilterFile)){
         $spilterList = file_get_contents($spilterFile);
@@ -41,3 +46,6 @@ if(defined('GENERATE_LABEL') && GENERATE_LABEL == true){
 
 
 //生成question
+if($config['switch']['generate_qst']){
+    $qstGen = new Question();
+}

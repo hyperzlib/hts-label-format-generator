@@ -1,6 +1,6 @@
 <?php
 class labelFormat {
-    private $staticChar = ['p' => ['', '@', '^', '-', '+', '=']];
+    private $staticChar = [];
     private $randChar = ['-', '+', '=', '{', '}', '[', ']', '!', '@', '#', '$', '^', '&'];
     private $usedChar = [];
 
