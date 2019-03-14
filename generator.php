@@ -48,4 +48,7 @@ if($config['switch']['generate_label'] == true){
 //生成question
 if($config['switch']['generate_qst']){
     $qstGen = new Question();
+    $qstGen->generate($config, $spilterList);
+    $qst = $qstGen->getQuestion();
+    file_put_contents($qstFile, $qst);
 }

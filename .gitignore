@@ -1,4 +1,7 @@
 /vendor
 /output
+/.idea
+/.vs
 
 composer.lock
+test.php

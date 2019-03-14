@@ -18,6 +18,6 @@
 		}
 	},
 	"autoload": {
-		"files": ["LabelFormat.php", "Question.php"]
+		"files": ["LabelFormat.php", "Question.php", "Utils.php"]
 	}
 }

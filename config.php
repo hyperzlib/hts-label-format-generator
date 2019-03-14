@@ -51,8 +51,10 @@
             ['s', '当前音的绝对音高(国际音高表示法)', 'C', 'note_abs_scale'],
             ['d', '当前音的BPM', 'C', 'note_tempo'],
             ['s', '当前音的语言', 'C', 'language'],
-            ['d', '与前一个音的音高差(半音)', 'C', 'note_left_rel_scale'],
-            ['d', '与后一个音的音高差(半音)', 'C', 'note_right_rel_scale'],
+            ['d', '与前一个音的音高差(正，半音)', 'C', 'note_left_rel_scale(up)'],
+            ['d', '与后一个音的音高差(正，半音)', 'C', 'note_right_rel_scale(up)'],
+            ['d', '与前一个音的音高差(负，半音)', 'C', 'note_left_rel_scale(down)'],
+            ['d', '与后一个音的音高差(负，半音)', 'C', 'note_right_rel_scale(down)'],
 
         ],
         'f' => [
@@ -204,7 +206,10 @@
             ],
         ],
         'note_abs_scale' => [
-            'range' => 'scale_range',
+            'scalerange' => [
+                'start' => 'C1',
+                'end' => 'B6',
+            ],
         ],
         'note_tempo' => [
             'range' => [
@@ -224,15 +229,27 @@
                 ],
             ],
         ],
-        'note_left_rel_scale' => [
+        'note_left_rel_scale(up)' => [
             'range' => [
-                'start' => -24,
+                'start' => 0,
                 'end' => 24,
             ],
         ],
-        'note_right_rel_scale' => [
+        'note_right_rel_scale(up)' => [
             'range' => [
-                'start' => -24,
+                'start' => 0,
+                'end' => 24,
+            ],
+        ],
+        'note_left_rel_scale(down)' => [
+            'range' => [
+                'start' => 0,
+                'end' => 24,
+            ],
+        ],
+        'note_right_rel_scale(down)' => [
+            'range' => [
+                'start' => 0,
                 'end' => 24,
             ],
         ],

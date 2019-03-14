@@ -1,6 +1,7 @@
 <?php
 class Question {
     private $qstLine = []; //qst脚本行
+    private $qstGroupLen = 0;
 
     public function __construct(){
 
@@ -15,10 +16,42 @@ class Question {
             if($rChar === ''){
                 $regexList[] = '*' . $lChar . $one;
             } else {
-                $regexList[] = '*' . $lChar . $center . $rChar . '*';
+                $regexList[] = '*' . $lChar . $one . $rChar . '*';
             }
         }
         return '{' . implode(',', $regexList) . '}';
+    }
+
+    public function splitNum($num){
+        $ret = [];
+        while($num != 0){
+            $ret[] = $num % 10;
+            $num = floor($num / 10);
+        }
+        return array_reverse($ret);
+    }
+
+    //生成0到指定数字的正则表达式
+    public function getNumRangeRegex($num){
+        $ret = [];
+        $prefix = '';
+        $numList = $this->splitNum($num);
+        $numLen = count($numList);
+        for($i = 1; $i < $numLen; $i ++){
+            $ret[] = str_repeat('?', $i);
+        }
+        for($i = 0; $i < $numLen; $i ++){
+            $one = $numList[$i];
+            $fillLen = $numLen - $i - 1;
+            $j = 0;
+            if($numLen > 1 && $i == 0) $j = 1;
+            for(; $j < $one; $j ++){
+                $ret[] = $prefix . strval($j) . str_repeat('?', $fillLen);
+            }
+            $prefix .= strval($one);
+        }
+        $ret[] = strval($num);
+        return $ret;
     }
 
     public function generatePair($lChar, $rChar, $prefix, $class, $data, $param){
@@ -33,29 +66,157 @@ class Question {
                 $maxKeyLen = $keyLen;
             }
         }
+        if($prefix !== ''){
+            $prefix .= '-';
+        }
+        $prefix .= Utils::toTitleCase($class);
+        $this->qstLine[] = '// QS Group "' . $prefix . '" (' . strval($this->qstGroupLen + 1) . '/%d) %.1f%%';
         foreach($data as $key => $one){ //遍历所有键和值
             $fillSpace = $maxKeyLen - strlen($key);
             $qsData = 'QS ';
-            $qsName = '';
-            if($prefix !== ''){
-                $qsName = $prefix . '-';
-            }
-            $qsName .= Utils::toTitleCase($class) . $spilter . $key;
+            $qsName = $prefix . $spilter . $key;
             $qsRegex = $this->generateOne($lChar, $rChar, $one);
             $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
             $this->qstLine[] = $qsData;
         }
         $this->qstLine[] = '';
+        $this->qstGroupLen ++;
+    }
+
+    public function generateList($lChar, $rChar, $prefix, $class, $data, $param){
+        $spilter = '_';
+        if(isset($param['spilter'])){
+            $spilter = $param['spilter'];
+        }
+        $maxKeyLen = 0;
+        foreach($data as $one){
+            $keyLen = strlen($one);
+            if($keyLen > $maxKeyLen){
+                $maxKeyLen = $keyLen;
+            }
+        }
+        if($prefix !== ''){
+            $prefix .= '-';
+        }
+        $prefix .= Utils::toTitleCase($class);
+        $this->qstLine[] = '// QS Group "' . $prefix . '_List" (' . strval($this->qstGroupLen + 1) . '/%d) %.1f%%';
+        foreach($data as $one){ //遍历所有键和值
+            $fillSpace = $maxKeyLen - strlen($one);
+            $qsData = 'QS ';
+            $qsName = $prefix . $spilter . $one;
+            $qsRegex = $this->generateOne($lChar, $rChar, $one);
+            $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
+            $this->qstLine[] = $qsData;
+        }
+        $this->qstLine[] = '';
+        $this->qstGroupLen ++;
+    }
+
+    public function generateRange($lChar, $rChar, $prefix, $class, $data, $param){
+        $spilter = '<=';
+        if(isset($param['spilter'])){
+            $spilter = $param['spilter'];
+        }
+        if(isset($data['start'])){ //单级参数转多级
+            $data = [$data];
+        }
+        $maxKeyLen = 0;
+        //得到最长的数字
+        foreach($data as $one){
+            $tLen = strlen(strval($one['end']));
+            if($tLen > $maxKeyLen){
+                $maxKeyLen = $tLen;
+            }
+        }
+        if($prefix !== ''){
+            $prefix .= '-';
+        }
+        $prefix .= Utils::toTitleCase($class);
+        $this->qstLine[] = '// QS Group "' . $prefix . '" (' . strval($this->qstGroupLen + 1) . '/%d) %.1f%%';
+        //插入为xx空参数的段落
+        $fillSpace = $maxKeyLen - strlen('xx') + 1;
+        $qsData = 'QS ';
+        $qsName = $prefix . '=xx';
+        $qsRegex = $this->generateOne($lChar, $rChar, 'xx');
+        $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
+        $this->qstLine[] = $qsData;
+        //分别生成每个区段
+        foreach($data as $one){
+            $start = $one['start'];
+            $end = $one['end'];
+            $step = isset($one['step']) ? $one['step'] : 1;
+            for($i = $start; $i <= $end; $i += $step){
+                $strKey = strval($i);
+                $fillSpace = $maxKeyLen - strlen($strKey);
+                $qsData = 'QS ';
+                $qsName = $prefix . $spilter . $strKey;
+                $qsRegex = $this->generateOne($lChar, $rChar, $this->getNumRangeRegex($i));
+                $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
+                $this->qstLine[] = $qsData;
+            }
+        }
+        $this->qstLine[] = '';
+        $this->qstGroupLen ++;
+    }
+
+    public function generateScaleRange($lChar, $rChar, $prefix, $class, $data, $param){
+        $scales = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+        $spilter = '<=';
+        if(isset($param['spilter'])){
+            $spilter = $param['spilter'];
+        }
+        if(isset($data['start'])) { //单级参数转多级
+            $data = [$data];
+        }
+        $maxKeyLen = 3;
+
+        if($prefix !== ''){
+            $prefix .= '-';
+        }
+        $prefix .= Utils::toTitleCase($class);
+        $this->qstLine[] = '// QS Group "' . $prefix . '" (' . strval($this->qstGroupLen + 1) . '/%d) %.1f%%';
+        //插入为xx空参数的段落
+        $fillSpace = $maxKeyLen - strlen('xx') + 1;
+        $qsData = 'QS ';
+        $qsName = $prefix . '=xx';
+        $qsRegex = $this->generateOne($lChar, $rChar, 'xx');
+        $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
+        $this->qstLine[] = $qsData;
+        //分别生成每个区段
+        foreach($data as $one){
+            $start = $one['start'];
+            $end = $one['end'];
+            $step = isset($one['step']) ? $one['step'] : 1;
+            for($i = $start; $i <= $end; $i += $step){
+                $strKey = strval($i);
+                $fillSpace = $maxKeyLen - strlen($strKey);
+                $qsData = 'QS ';
+                $qsName = $prefix . $spilter . $strKey;
+                $qsRegex = $this->generateOne($lChar, $rChar, $this->getNumRangeRegex($i));
+                $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
+                $this->qstLine[] = $qsData;
+            }
+        }
+        $this->qstLine[] = '';
+        $this->qstGroupLen ++;
     }
 
     public function generate($conf, $spilterList){
         //遍历所有键
         $genMap = &$conf['map'];
-        foreach($conf['part'] as $key => $values){
-            if(isset($spilterList['part'])){
-                $spilters = &$spilterList['part'];
+        $parts = &$conf['part'];
+        $keyMap = array_keys($parts);
+        for($i = 0; $i < count($keyMap); $i ++){
+            $key = $keyMap[$i];
+            $values = $parts[$key];
+            if(isset($spilterList[$key])){
+                $spilters = &$spilterList[$key];
             } else {
+                print($spilterList);
                 throw new Exception('没有找到 ' . $key . ' 区段的分隔符');
+            }
+            if($i < count($keyMap) - 1){
+                $spilters[] = $spilterList[$keyMap[$i + 1]][0];
             }
 
             //遍历所有参数
@@ -69,7 +230,7 @@ class Question {
                 $genCode = &$genMap[$class]; //解析生成指令
                 foreach($genCode as $type => $data){
                     $specialData = [];
-                    foreach($data as $key2 => $data2){
+                    foreach($genCode as $key2 => $data2){
                         if(strpos($key2, $type . '_') == 0){
                             $tKey = substr(strstr($key2, '_'), 1);
                             $specialData[$tKey] = $data2;
@@ -82,12 +243,32 @@ class Question {
                             $this->generatePair($lChar, $rChar, $prefix, $class, $data, $specialData);
                             break;
                         case 'list': //列表数据
+                            $this->generateList($lChar, $rChar, $prefix, $class, $data, $specialData);
                             break;
                         case 'range': //区间数据
+                            $this->generateRange($lChar, $rChar, $prefix, $class, $data, $specialData);
+                            break;
+                        case 'scalerange': //音高区间
+                            //$this->generateScale($lChar, $rChar, $prefix, $class, $data, $specialData);
                             break;
                     }
                 }
             }
         }
+    }
+
+    public function fillProgress(){
+        $nowNum = 1;
+        foreach($this->qstLine as $key => $one){
+            if(strpos($one, '//') === 0){
+                $this->qstLine[$key] = sprintf($one, $this->qstGroupLen, (floatval($nowNum) / $this->qstGroupLen) * 100);
+                $nowNum ++;
+            }
+        }
+    }
+
+    public function getQuestion(){
+        $this->fillProgress();
+        return implode("\n", $this->qstLine);
     }
 }
