@@ -1,4 +1,7 @@
 # HTS label generator
+--
+[![Build Status](https://travis-ci.org/hyperzlib/hts-label-format-generator.svg?branch=master)](https://travis-ci.org/hyperzlib/hts-label-format-generator)
+
 
 ## TODO
 - [x] Label spilter generator
