@@ -3,7 +3,7 @@
 ## TODO
 - [x] Label spilter generator
 - [x] Label readme generator
-- [ ] Question generator
+- [x] Question generator
 
 ## Prepare
 ---
@@ -20,3 +20,5 @@ Use:
 php generator.php
 ```
 to generate your label format and question.hed
+
+If you want to re-generate separator pairs, please delete the separatir.json in output folder.

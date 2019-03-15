@@ -1,7 +1,8 @@
 <?php
 class Question {
-    private $qstLine = []; //qst脚本行
+    private $qstLine = ['TR 3']; //qst脚本行
     private $qstGroupLen = 0;
+    private $scales = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']; //音高标记
 
     public function __construct(){
 
@@ -54,10 +55,40 @@ class Question {
         return $ret;
     }
 
-    public function generatePair($lChar, $rChar, $prefix, $class, $data, $param){
-        $spilter = '-';
-        if(isset($param['spilter'])){
-            $spilter = $param['spilter'];
+    public function getScaleRangeRegex($now){
+        //解析数据
+        $ret = [];
+        $scale = substr($now, 0, -1);
+        $octave = intval(substr($now, strlen($scale)));
+        $scaleId = array_search($scale, $this->scales); //获取音符的ID
+        for($i = 0; $i < $octave; $i ++){
+            $ret[] = '?' . strval($i);
+            $ret[] = '?b' . strval($i);
+        }
+        for($i = 0; $i <= $scaleId; $i ++){
+            $ret[] = $this->scales[$i] . strval($octave);
+        }
+        return $ret;
+    }
+
+    public function scaleToInt($now){
+        $scale = substr($now, 0, -1);
+        $octave = intval(substr($now, strlen($scale)));
+        $scaleId = array_search($scale, $this->scales);
+        return $octave * 12 + $scaleId;
+    }
+
+    public function intToScale($num){
+        $scaleId = $num % 12;
+        $octave = floor($num / 12);
+        $scale = $this->scales[$scaleId];
+        return $scale . $octave;
+    }
+
+    public function generatePair($lChar, $rChar, $prefix, $class, &$data, &$param) {
+        $separator = '-';
+        if(isset($param['separator'])){
+            $separator = $param['separator'];
         }
         $maxKeyLen = 0;
         foreach($data as $key => $one){
@@ -74,7 +105,7 @@ class Question {
         foreach($data as $key => $one){ //遍历所有键和值
             $fillSpace = $maxKeyLen - strlen($key);
             $qsData = 'QS ';
-            $qsName = $prefix . $spilter . $key;
+            $qsName = $prefix . $separator . $key;
             $qsRegex = $this->generateOne($lChar, $rChar, $one);
             $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
             $this->qstLine[] = $qsData;
@@ -83,10 +114,10 @@ class Question {
         $this->qstGroupLen ++;
     }
 
-    public function generateList($lChar, $rChar, $prefix, $class, $data, $param){
-        $spilter = '_';
-        if(isset($param['spilter'])){
-            $spilter = $param['spilter'];
+    public function generateList($lChar, $rChar, $prefix, $class, &$data, &$param){
+        $separator = '_';
+        if(isset($param['separator'])){
+            $separator = $param['separator'];
         }
         $maxKeyLen = 0;
         foreach($data as $one){
@@ -103,7 +134,7 @@ class Question {
         foreach($data as $one){ //遍历所有键和值
             $fillSpace = $maxKeyLen - strlen($one);
             $qsData = 'QS ';
-            $qsName = $prefix . $spilter . $one;
+            $qsName = $prefix . $separator . $one;
             $qsRegex = $this->generateOne($lChar, $rChar, $one);
             $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
             $this->qstLine[] = $qsData;
@@ -112,10 +143,10 @@ class Question {
         $this->qstGroupLen ++;
     }
 
-    public function generateRange($lChar, $rChar, $prefix, $class, $data, $param){
-        $spilter = '<=';
-        if(isset($param['spilter'])){
-            $spilter = $param['spilter'];
+    public function generateRange($lChar, $rChar, $prefix, $class, &$data, &$param){
+        $separator = '<=';
+        if(isset($param['separator'])){
+            $separator = $param['separator'];
         }
         if(isset($data['start'])){ //单级参数转多级
             $data = [$data];
@@ -123,6 +154,7 @@ class Question {
         $maxKeyLen = 0;
         //得到最长的数字
         foreach($data as $one){
+
             $tLen = strlen(strval($one['end']));
             if($tLen > $maxKeyLen){
                 $maxKeyLen = $tLen;
@@ -149,7 +181,7 @@ class Question {
                 $strKey = strval($i);
                 $fillSpace = $maxKeyLen - strlen($strKey);
                 $qsData = 'QS ';
-                $qsName = $prefix . $spilter . $strKey;
+                $qsName = $prefix . $separator . $strKey;
                 $qsRegex = $this->generateOne($lChar, $rChar, $this->getNumRangeRegex($i));
                 $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
                 $this->qstLine[] = $qsData;
@@ -159,11 +191,10 @@ class Question {
         $this->qstGroupLen ++;
     }
 
-    public function generateScaleRange($lChar, $rChar, $prefix, $class, $data, $param){
-        $scales = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-        $spilter = '<=';
-        if(isset($param['spilter'])){
-            $spilter = $param['spilter'];
+    public function generateScaleRange($lChar, $rChar, $prefix, $class, &$data, &$param){
+        $separator = '<=';
+        if(isset($param['separator'])){
+            $separator = $param['separator'];
         }
         if(isset($data['start'])) { //单级参数转多级
             $data = [$data];
@@ -184,15 +215,15 @@ class Question {
         $this->qstLine[] = $qsData;
         //分别生成每个区段
         foreach($data as $one){
-            $start = $one['start'];
-            $end = $one['end'];
-            $step = isset($one['step']) ? $one['step'] : 1;
+            $start = $this->scaleToInt($one['start']);
+            $end = $this->scaleToInt($one['end']);
+            $step = 1;
             for($i = $start; $i <= $end; $i += $step){
-                $strKey = strval($i);
+                $strKey = $this->intToScale($i);
                 $fillSpace = $maxKeyLen - strlen($strKey);
                 $qsData = 'QS ';
-                $qsName = $prefix . $spilter . $strKey;
-                $qsRegex = $this->generateOne($lChar, $rChar, $this->getNumRangeRegex($i));
+                $qsName = $prefix . $separator . $strKey;
+                $qsRegex = $this->generateOne($lChar, $rChar, $this->getScaleRangeRegex($this->intToScale($i)));
                 $qsData .= '"' . $qsName . '" ' . str_repeat(' ', $fillSpace) . $qsRegex;
                 $this->qstLine[] = $qsData;
             }
@@ -201,7 +232,7 @@ class Question {
         $this->qstGroupLen ++;
     }
 
-    public function generate($conf, $spilterList){
+    public function generate(&$conf, &$separatorList){
         //遍历所有键
         $genMap = &$conf['map'];
         $parts = &$conf['part'];
@@ -209,14 +240,14 @@ class Question {
         for($i = 0; $i < count($keyMap); $i ++){
             $key = $keyMap[$i];
             $values = $parts[$key];
-            if(isset($spilterList[$key])){
-                $spilters = &$spilterList[$key];
+            if(isset($separatorList[$key])){
+                $separators = &$separatorList[$key];
             } else {
-                print($spilterList);
+                print($separatorList);
                 throw new Exception('没有找到 ' . $key . ' 区段的分隔符');
             }
             if($i < count($keyMap) - 1){
-                $spilters[] = $spilterList[$keyMap[$i + 1]][0];
+                $separators[] = $separatorList[$keyMap[$i + 1]][0];
             }
 
             //遍历所有参数
@@ -236,8 +267,8 @@ class Question {
                             $specialData[$tKey] = $data2;
                         }
                     }
-                    $lChar = $spilters[$id];
-                    $rChar = isset($spilters[$id + 1]) ? $spilters[$id + 1] : '';
+                    $lChar = $separators[$id];
+                    $rChar = isset($separators[$id + 1]) ? $separators[$id + 1] : '';
                     switch($type){
                         case 'pair': //键、值数据
                             $this->generatePair($lChar, $rChar, $prefix, $class, $data, $specialData);
@@ -248,8 +279,8 @@ class Question {
                         case 'range': //区间数据
                             $this->generateRange($lChar, $rChar, $prefix, $class, $data, $specialData);
                             break;
-                        case 'scalerange': //音高区间
-                            //$this->generateScale($lChar, $rChar, $prefix, $class, $data, $specialData);
+                        case 'scaleRange': //音高区间
+                            $this->generateScaleRange($lChar, $rChar, $prefix, $class, $data, $specialData);
                             break;
                     }
                 }

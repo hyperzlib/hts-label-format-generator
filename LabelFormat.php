@@ -1,21 +1,25 @@
 <?php
 class labelFormat {
     private $staticChar = [];
-    private $randChar = ['-', '+', '=', '{', '}', '[', ']', '!', '@', '#', '$', '^', '&'];
+    private $randChar = [];
     private $usedChar = [];
 
     public function __construct(){
 
     }
 
-    public function setStaticSpilter($spliter){
-        $this->staticChar = $spliter;
+    public function setStaticSeparator($separator){
+        $this->staticChar = $separator;
+    }
+
+    public function setSeparatorRange($separator){
+        $this->randChar = $separator;
     }
 
     /**
      * 判断分隔符是否存在
      */
-    public function isSpliterExists($last, $now){
+    public function isSeparatorExists($last, $now){
         $len = count($this->usedChar);
         for($i = 1; $i < $len; $i ++){
             if($this->usedChar[$i - 1] == $last && $this->usedChar[$i] == $now){
@@ -28,7 +32,7 @@ class labelFormat {
     /**
      * 生成指定长度的分隔符
      */
-    public function generateSpliter($startChar, $num){
+    public function generateSeparator($startChar, $num){
         $len = count($this->randChar) - 1;
         $spliters = [$startChar];
         $this->usedChar[] = $startChar;
@@ -37,7 +41,7 @@ class labelFormat {
             $startTime = time();
             while(true){
                 $rand = $this->randChar[rand(0, $len)];
-                if(!$this->isSpliterExists($lastChar, $rand)){
+                if(!$this->isSeparatorExists($lastChar, $rand)){
                     $lastChar = $rand;
                     $spliters[] = $rand;
                     $this->usedChar[] = $rand;
@@ -54,15 +58,15 @@ class labelFormat {
     /**
      * 将分隔符插入字符列表
      */
-    public function cInsert($strList, $spliterList){
-        if(count($strList) != count($spliterList)){
-            throw new Exception('The length of stringList not equal with spliterList');
+    public function cInsert($strList, $separatorList){
+        if(count($strList) != count($separatorList)){
+            throw new Exception('The length of stringList not equal with separatorList');
         }
 
         $ret = '';
         $len = count($strList);
         for($i = 0; $i < $len; $i ++){
-            $ret .= $spliterList[$i] . $strList[$i];
+            $ret .= $separatorList[$i] . $strList[$i];
         }
         return $ret;
     }
@@ -83,12 +87,12 @@ class labelFormat {
         return $ret;
     }
 
-    public function generateMarkdown($config, $spliterList){
-        $md = '';
+    public function generateMarkdown($config, $separatorList){
+        $md = "<style>* { font-family: Consolas, 'Courier New', monospace, 'Microsoft Yahei' }</style>\r\n";
         //生成示例
         $demoList = [];
-        foreach($config as $key => $one){
-            $demoList[$key] = $this->cInsert($this->generateId($key, count($one)), $spliterList[$key]);
+        foreach($config as $key => $one) {
+            $demoList[$key] = $this->cInsert($this->generateId($key, count($one)), $separatorList[$key]);
         }
         $md .= "## 示例\r\n";
         $md .= "```\r\n";
@@ -110,16 +114,14 @@ class labelFormat {
         $md .= "\r\n## 格式\r\n";
         $md .= "```\r\n";
         foreach($config as $key => $one){
-            $md .= '"' . $this->cInsert($this->generateFormat($one), $spliterList[$key]) . '", ' . implode(', ', $this->generateId($key, count($one))) . "\r\n";
+            $md .= '"' . $this->cInsert($this->generateFormat($one), $separatorList[$key]) . '", ' . implode(', ', $this->generateId($key, count($one))) . "\r\n";
         }
         $md .= "```\r\n";
         return $md;
     }
 
     public function generate($config){
-        $demoList = [];
-        $formatList = [];
-        $spliterList = [];
+        $separatorList = [];
         foreach($config as $key => $one){
             $key = strtolower($key);
             if(isset($this->staticChar[$key])){
@@ -128,24 +130,24 @@ class labelFormat {
                 } else {
                     $startChar = '';
                 }
-                $spliter[0] = $startChar;
-                $spliter = $this->staticChar[$key];
-                if(count($spliter) >= count($one)){
-                    $spliter = array_splice($spliter, 0, count($one));
+                $separator[0] = $startChar;
+                $separator = $this->staticChar[$key];
+                if(count($separator) >= count($one)){
+                    $separator = array_splice($separator, 0, count($one));
                 }
-                $this->usedChar = array_merge($this->usedChar, $spliter);
-                if(count($spliter) < count($one)) {
-                    $appendSpliter = $this->generateSpliter(end($spliter), count($one) - count($spliter) + 1);
-                    $spliter = array_merge($spliter, array_splice($appendSpliter, 1));
+                $this->usedChar = array_merge($this->usedChar, $separator);
+                if(count($separator) < count($one)) {
+                    $appendSeparator = $this->generateSeparator(end($separator), count($one) - count($separator) + 1);
+                    $separator = array_merge($separator, array_splice($appendSeparator, 1));
                 }
 
             } else {
                 $startChar = '/' . strtoupper($key) . ':';
-                $spliter = $this->generateSpliter($startChar, count($one));
+                $separator = $this->generateSeparator($startChar, count($one));
             }
-            $spliterList[$key] = $spliter;
+            $separatorList[$key] = $separator;
             
         }
-        return $spliterList;
+        return $separatorList;
     }
 }

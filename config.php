@@ -3,9 +3,10 @@
         'generate_label' => true,
         'generate_qst' => true,
     ],
-    'static_spilter' => [
+    'static_separator' => [
         'p' => ['', '@', '^', '-', '+', '='],
     ],
+    'separator_range' => ['-', '+', '=', '[', ']', '!', '@', '#', '$', '^', '&'],
     'part' => [
         'p' => [
             ['s', '音素类型(b:爆破, p:等待, s:无声音, c:元音, v:辅音)', '', 'phone_language_independent_pause'],
@@ -14,11 +15,11 @@
             ['s', '当前音素', 'C', 'phone'],
             ['s', '下个音素', 'R', 'phone'],
             ['s', '下下个音素', 'RR', 'phone'],
-            ['s', '上上个音的表情', 'LL', 'express'],
-            ['s', '上个音的表情', 'L', 'express'],
-            ['s', '当前音的表情', 'C', 'express'],
-            ['s', '下个音的表情', 'R', 'express'],
-            ['s', '下下个音的表情', 'RR', 'express'],
+            ['d', '上上个音的表情', 'LL', 'express'],
+            ['d', '上个音的表情', 'L', 'express'],
+            ['d', '当前音的表情', 'C', 'express'],
+            ['d', '下个音的表情', 'R', 'express'],
+            ['d', '下下个音的表情', 'RR', 'express'],
         ],
         'a' => [
             ['d', '上一个音符距离本句开头的音素数', 'L', 'fw_pos_in_sentence'],
@@ -93,7 +94,7 @@
                 'Voice_Fricative_Consonants' => ['r', 'k'],
                 'Vowel_Consonants' => ['w', 'y'],
                 'Nasal_Consonants' => ['m', 'n', 'l'],
-                'Slient' => ['sil', 'pau'],
+                'Silent' => ['sil', 'pau'],
                 //元音列表
                 'TypeA_Vowels' => ['a', 'ia', 'an', 'ang', 'ai', 'ua', 'ao'],
                 'TypeE_Vowels' => ['e', 'ei', 'uei', 'er'],
@@ -121,7 +122,7 @@
                 'Cantonese_Chinese' => ['CHC', 'CTN'], //粤语
                 'Japanese' => 'JPN',
             ],
-            'pair_spilter' => '=',
+            'pair_separator' => '=',
         ],
         'fw_pos_in_note' => [
             'range' => [
@@ -206,7 +207,7 @@
             ],
         ],
         'note_abs_scale' => [
-            'scalerange' => [
+            'scaleRange' => [
                 'start' => 'C1',
                 'end' => 'B6',
             ],
