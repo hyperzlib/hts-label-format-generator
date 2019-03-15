@@ -13,3 +13,14 @@ script: php generator.php
 # configure notifications (email, IRC, campfire etc)
 notifications:
   email: "mcleague@126.com"
+
+before_deploy:
+  - zip -r label_format_generator.zip ./*
+
+deploy:
+  provider: releases
+  api_key: ${github_api_key}
+  file: "label_format_generator.zip"
+  skip_cleanup: true
+  on:
+    tags: true
