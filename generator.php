@@ -14,6 +14,7 @@ $separatorFile = $outputDir . '/separator.json';
 $helpFile = $outputDir . '/readme.md';
 $qstFile = $outputDir . '/question.hed';
 
+@mkdir($outputDir, 0777, true);
 require_once(__DIR__ . '/vendor/autoload.php');
 $config = include('config.php');
 
