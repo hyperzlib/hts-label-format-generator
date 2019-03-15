@@ -11,12 +11,6 @@
 		"php": ">=5.5.0",
         "symfony/yaml": "^4.2"
 	},
-	"repositories": {
-		"packagist": {
-			"type": "composer",
-			"url": "https://packagist.phpcomposer.com"
-		}
-	},
 	"autoload": {
 		"files": ["LabelFormat.php", "Question.php", "Utils.php"]
 	}
