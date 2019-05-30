@@ -34,8 +34,9 @@ if($config['switch']['generate_label'] == true){
     $label->setSeparatorRange($config['separator_range']);
     $separatorList = $label->generate($config['part']);
     $helper = $label->generateMarkdown($config['part'], $separatorList);
+    $template = $label->generateTemplate($config['part'], $separatorList);
 
-    file_put_contents($separatorFile, json_encode($separatorList));
+    file_put_contents($separatorFile, json_encode($template));
     file_put_contents($helpFile, $helper);
 } elseif($config['switch']['generate_qst']) {
     //读取已经生成的Label

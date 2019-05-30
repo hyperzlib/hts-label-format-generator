@@ -120,6 +120,20 @@ class labelFormat {
         return $md;
     }
 
+    public function generateTemplate($config, $separatorList){
+        //生成示例
+        $template = [];
+        foreach($separatorList as $type => $separators){
+            $opt = $config[$type];
+            $temp = [];
+            foreach($separators as $key => $separator){
+                $temp[] = [$opt[$key][2], $opt[$key][3]];
+            }
+            $template[$type] = $temp;
+        }
+        return ['separators' => $separatorList, 'values' => $template];
+    }
+
     public function generate($config){
         $separatorList = [];
         foreach($config as $key => $one){
